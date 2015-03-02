@@ -1,0 +1,242 @@
+<div class='product-list'>
+  <% @baseProducts = Array.new() %>
+  <% for productPage in 1..@pageCount %>
+    <% @products[productPage].each do |product| %>
+      <div class='hidden-product ' id=<%= product.id.to_s %>>
+        <% if product.tags.include?('base_product') %>
+          <% @baseProducts.push(product) %>
+        <% end %>
+        <% @baseProducts.length %>
+        <%= product.title %>
+        <%= '|' + product.body_html %>
+        <% if product.images %>
+          <% product.images.first(1).each do |image|%>
+            <%= '|' + image.src %>
+          <% end %>
+        <% else %>
+          No Images
+        <% end %>
+      </div>
+    <% end %>
+  <% end %>
+</div>
+<div class='main-content-wrapper'>
+  <div class='add-prod-bg'></div>
+  <div class='add-prod-module'>
+    <div class='remove'><input id='close-add-prod' type='button' value='CLOSE'></div>
+    <div class='add-type'>
+      <input type='button' id='add-existing-product' value='Add Existing Product'/>
+      <input type='button' id='create-new-product' value='Create New'/>
+    </div>
+    <div class='existing-products'>
+    </div>
+    <!--<div>remember to use form tags for forms, i.e <% form_tag %></div>-->
+    <form class='new-product'>
+      <div class='new-prod-img row-fluid'>
+        <div class='span6'>
+          Add A Product Image
+        </div>
+        <div class='span6'>
+          <input type='file' id='prod-img' name='prod-img.jpg' required>
+        </div>        
+      </div>
+      <div class='new-prod-title row-fluid'>
+        <div class='span6'>
+          Add A Product Title
+        </div>
+        <div class='span6'>
+          <input type='text' id='prod-title' name='prod-title' required>
+        </div>          
+      </div>
+      <div class='new-prod-description row-fluid'>
+        <div class='span6'>
+          Add A Product Description
+        </div>
+        <div class='span6'>
+          <input type='text' id='prod-description' name='prod-description' required>
+        </div>         
+      </div>
+      <div class='new-prod-price row-fluid'>
+        <div class='span6'>
+          Add A Product Price
+        </div>
+        <div class='span6'>
+          <input type='number' id='prod-price' name='prod-price' required>
+        </div>         
+      </div> 
+      <input class='add-new-prod' type='submit' value='Add'>                 
+    </form>
+  </div>
+  <div class='row-fluid tabs'>
+    <div class='products-tab'>
+      Products
+    </div>
+    <div class='relationships-tab'>
+      Packages
+    </div>
+    <div class='app-settings-tab'>
+      App Settings
+    </div>
+  </div>
+  <div class='products-main-content'>
+    <div class='row-fluid'>
+      <!--<div>you may be able to replace these with form generators</div>-->
+      <input class='add-product' type='button' value='Add A Product'/>
+    </div>
+    <div class='products row-fluid'>
+      <div class='product-type'>
+        Base Products
+      </div>
+      <div class='base-products'>
+        <% @baseProducts.each do |product| %>
+          <div class="row-fluid base-product">
+            <div class="img-wrapper span3">
+              <% if product.images %>
+                <% product.images.first(1).each do |image|%>
+                  <img src=<%= image.src %>/>
+                <% end %>
+                <!-- TODO pehaps put alt img in here-->
+              <% end %>              
+            </div>
+            <div class="text-section span6">
+              <div class="row-fluid id"><%= product.id.to_s %></div>
+              <div class="row-fluid title"><%= product.title %></div>
+              <div class="row-fluid desc"><%= product.body_html %></div>
+            </div>
+            <div class="remove-button-wrapper span3">
+              <input class="remove-prod" type="button" value="Remove Product"/>
+            </div>
+          </div>
+        <% end %>       
+      </div>
+    </div>
+    <div class='products row-fluid'>
+      <div class='product-type'>
+        Component Products
+      </div>
+      <div class='component-products'>
+      </div>
+    </div>   
+  </div>
+</div>
+
+<script type='text/javascript'>
+    function productAlert(prodId){
+      alert('Oh no! It appears there was an error updating the product with ID: '+prodId);
+    }
+    function showAddProducts( createNew ){
+      if( createNew ){
+        $('.new-product').show();
+      }else{
+        $('.existing-products').show();
+      }
+      $('#add-existing-product').hide();
+      $('#create-new-product').hide();
+    }
+    function hideAddProducts( createNew ){
+      if( createNew ){
+        $('.new-product').hide();
+      }else{
+        $('.existing-products').hide();
+      }
+      $('#add-existing-product').show();
+      $('#create-new-product').show();
+      $('.add-prod-module').hide();
+      $('.add-prod-bg').hide();
+    } 
+    function updateProduct( prodId, addBaseTag ){
+      var URL = addBaseTag ? 'add_base_tag' : 'remove_base_tag';
+      return $.ajax({
+        type: 'POST',
+        url: URL,
+        data: { 'id' : prodId }
+      });
+    }
+    function insertProductInfo( element, useImg, imgSrc, id, title, description, add){
+      var imgDiv = useImg ? '<img src='+imgSrc+'>' : '';
+      var parent = '';
+      if(element.attr('class') == 'existing-products'){
+        parent = '<div class="row-fluid existing-product">';
+      }else if(element.attr('class') == 'base-products'){
+        parent = '<div class="row-fluid base-product">';
+      }else{
+        parent = '<div class="row-fluid component-product">';
+      }
+      var button = '';
+      if( add ){
+        button = '<div class="add-button-wrapper span3">'+
+      '<input type="button" id="add-product" value="Add Product"/>'+
+      '</div>';
+      }else{
+        button = '<div class="remove-button-wrapper span3">'+
+      '<input class="remove-prod" type="button" value="Remove Product"/>'+
+      '</div>';
+      }
+      var newDiv = parent+
+      '<div class="img-wrapper span3">'+imgDiv+'</div>'+
+      '<div class="text-section span6">'+
+      '<div class="row-fluid id">'+id+'</div>'+
+      '<div class="row-fluid title">'+title+'</div>'+
+      '<div class="row-fluid desc">'+description+'</div></div>'+
+      button+
+      '</div>';
+      element.append(newDiv);
+    }  
+  $(function(){
+    $('.add-product').on('click',function(){
+      $('.add-prod-module').show();
+      $('.add-prod-bg').show();
+    });   
+    $('#create-new-product').on('click',function(){
+      showAddProducts(true);
+    });
+    $('#add-existing-product').on('click',function(){
+      showAddProducts(false);      
+    });
+    $('.hidden-product').each(function(){
+      var prodValues = $(this).text().split('|');
+      var useImg = prodValues.length > 2 ? true : false;
+      var container = $('.existing-products');
+      var id = $(this).attr('id');
+      insertProductInfo(container,useImg,prodValues[2],id,prodValues[0],prodValues[1],true);
+    });
+    $('.existing-products .existing-product .add-button-wrapper #add-product').on('click',function(){
+      var product = $(this).parent().parent().children('.text-section');
+      var prodId = product.children('.id').text();
+      updateProduct(prodId, true).done(function(result) {
+        var product = $('#'+prodId);
+        var prodValues = product.text().split('|');
+        var useImg = prodValues.length > 2 ? true : false;
+        insertProductInfo($('.base-products'),useImg,prodValues[2],prodId,prodValues[0],prodValues[1], false);
+        $('.remove-prod').on('click',function(){
+          var productDiv = $(this).parent().parent();
+          updateProduct(productDiv.children('.text-section').children('.id').text(), false).done(function(result){
+              productDiv.remove();
+          }).fail(function() {
+              productAlert(prodId);
+          });
+        });         
+      }).fail(function() {
+          productAlert(prodId);
+      });
+      hideAddProducts(false);
+      $('.add-prod-module').hide();
+      $('.add-prod-bg').hide();
+    });
+    $('#close-add-prod').on('click',function(){
+      hideAddProducts(true);
+      hideAddProducts(false);
+      $('.add-prod-module').hide();
+      $('.add-prod-bg').hide();
+    }); 
+    $('.remove-prod').on('click',function(){
+      var productDiv = $(this).parent().parent();
+      var prodId = productDiv.children('.text-section').children('.id').text();
+      updateProduct(prodId, false).done(function(result){
+          productDiv.remove();
+      }).fail(function() {
+          productAlert(prodId);
+      });
+    });     
+  })
+</script>
